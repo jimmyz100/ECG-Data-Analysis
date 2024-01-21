@@ -16,10 +16,10 @@ The general workflow of the program is as follows:
 7. Output plotted ECG waveform data with the aforementioned waveforms denoted as markers.
 8. Calculates parameters for subsequent analysis, including heart rate, heart rate variation, PR-interval, QRS-duration, QT-interval, ST-interval.
 
-![ECG Acquisition Setup and Signal Processing](https://ibb.co/c3VwkKN)
+![ECG Acquisition Setup and Signal Processing](https://i.postimg.cc/0jdsVZNm/Figure1-Meth-Final.png)
 (a)Figure of zebrafish ECG acquisition, processing of data from LabView, (b) Raw input data (in orange) and annotated data after utilizing aforementioned program (in blue)
 
-![Sample ECG cycle and parameters](https://ibb.co/zZzdf2s)
+![Sample ECG cycle and parameters](https://i.postimg.cc/Hs6Gjr8p/5.jpg)
 
 For more information, see: (https://ieeexplore.ieee.org/abstract/document/8636511)
 # Data Obtained from Consecutive treatments of methamphetamine promote the development of cardiac pathological symptoms in zebrafish

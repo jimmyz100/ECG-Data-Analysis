@@ -3,20 +3,20 @@ clc;        % Clear the command window.
 close all;  % Close all figures (except those of imtool.)
 workspace;  % Make sure the workspace panel is showing.
 
-no = 396;
-start = 395;
-Trimtxtfast(start,no)
-    A_HR = zeros(1,no);
-    A_QTc = zeros(1,no);
-    A_Ratio = zeros(1,no);
-    A_RR = zeros(1,no);
-    A_RTc = zeros(1,no);
-    A_QT = zeros(1,no);
-    A_RT = zeros(1,no);
-    A_ST = zeros(1,no);
+no = 396; % Number of files (last file number)
+start = 395; % First file to analyze (use for segmenting files into experimental groups)
+Trimtxtfast(start,no) % Trimtxtfast - a function to parse all data files (in txt), trims noisy sections from data, and formats them for subsequent analysis
+% Set up arrays for parameters (final averaged)
+A_HR = zeros(1,no); 
+A_QTc = zeros(1,no);
+A_Ratio = zeros(1,no);
+A_RR = zeros(1,no);
+A_RTc = zeros(1,no);
+A_QT = zeros(1,no);
+A_RT = zeros(1,no);
+A_ST = zeros(1,no);
 
 for noSignal = start:no
-% noSignal = 13;
  Average_HR = [];
  QTc = [];
  Ratio = [];
@@ -26,14 +26,14 @@ for noSignal = start:no
  Average_RT = [];
  Average_ST = [];
 
-for u = noSignal : noSignal
+for u = start : no
     name = sprintf('%d.txt', u);
-    dataPath = fullfile('C:\Users\jimmy\OneDrive\School Work\PhD\PhD Research\Methamphetamine Study\Large Exp\Data for Processing',name);
+    dataPath = fullfile('',name); % Insert file path here
    
     input = load(dataPath);
-    finalData = extractNoise( input(:,2) ,1000,5 );
+    finalData = extractNoise( input(:,2) ,1000,5 ); % Extract noise function
     noOfData = length(finalData);
-    finalOutput = preProcessingWT(noOfData,finalData,u);
+    finalOutput = preProcessingWT(noOfData,finalData,u); % Preprocessing function
     finalData = finalOutput';
     noOfData = length(finalData);
     %===========================Loading all data sets==========================
@@ -41,13 +41,13 @@ for u = noSignal : noSignal
     fishPackage = cell(noOfData,1);
 
     %========================Declare constant==================================
-    Fs = 1000;
-    RR_interval = 60;% 60 for fs = 1000; 8 for fs = 100
+    Fs = 1000; % Sampling rate (1000 Hz)
+    RR_interval = 60;% 60 for fs = 1000; 8 for fs = 100 % Predetermined parameters for subsequent signal processing
     slopeLevel = 5;% 5 for fs = 1000; 3 for fs =100
     windowLevel = 100;% 100 for fs = 1000; 8 for fs = 100
     QS_window = 6;% 6 for fs = 1000; 2 for fs = 100
-    threshold = zeros(1,1);
-    Q_wave = cell(noOfData,1);
+    threshold = zeros(1,1); % Arrays for calculation
+    Q_wave = cell(noOfData,1);  
     S_wave = cell(noOfData,1);
     P_wave = cell(noOfData,1);
     T_wave = cell(noOfData,1);
@@ -63,10 +63,10 @@ for u = noSignal : noSignal
     %==========================================================================
     for i = 1 : noOfData
 
-        fishPackage{i}(:,2) = finalData{i};
+        fishPackage{i}(:,2) = finalData{i}; % Store data into fishPackage
         fishPackage{i}(:,1) = 1: length(finalData{i});
         %===========================Spectrum Power Density ========================
-        % NFFT=4096;                 
+        % NFFT=4096;   % Number of fourier transform functions              
         % X1=fftshift(fft(ecg_zebrafish(:,2),NFFT));         
         % Px1=X1.*conj(X1)/(NFFT*length(ecg_zebrafish)); %Power of each freq components         
         % fVals=Fs*(-NFFT/2:NFFT/2-1)/NFFT;  
@@ -76,18 +76,18 @@ for u = noSignal : noSignal
         % xlabel('Frequency (Hz)')         
         % ylabel('Power(dB)');
         %===========================Slope calculation==============================
-        x{i} = differential(fishPackage{i}(:,2),slopeLevel).^2;
+        x{i} = differential(fishPackage{i}(:,2),slopeLevel).^2; % Used for peak detection
 
         %=========================Peak Detection===================================
         %%
-        peak{i} = max_detection(x{i},windowLevel);
+        peak{i} = max_detection(x{i},windowLevel); % Max_detection function for peak detection
 
         %%
-        %============================= Peak remove=================================
-        % Nhung dinh nao ma co Amplitude > 4* the average of amplitude
-        % The peaks which are less than 0.8 * the average of amplitude  is removed.
+        %============================= Peak removal (noisy data)=================================
+        % Amplitude > 4* the average of amplitude
+        % The peaks which are less than 0.8 * the average of amplitude are removed, as they are determined as noisy data.
         threshold(i) = mean(peak{i}(:,2));
-        %=================================Debug====================================
+        %=================================Debug for noisy signals (output plot of threshold lines)====================================
         if (flag3 ==3)
             figure
             plot(x{no});
@@ -100,9 +100,9 @@ for u = noSignal : noSignal
             peak{no}(peak{no}(:,2) > 20*threshold(i),:)=[];
             length(peak{no}(:,1));
             plot(peak{no}(:,1),x{no}(peak{no}(:,1)),'ro','MarkerEdgeColor','r','MarkerFaceColor','r','MarkerSize',6);
-            threshold(i) = mean(peak{no}(:,2)); % Tinh lai threshold sau khi loai nhung dinh lon hon 40* old Threshold cu
+            threshold(i) = mean(peak{no}(:,2)); 
             figure
-            title('Tin Hieu Do Doc Final');
+            title('Debug Plot Final');
             xlabel('Sample')
             ylabel('Amplitude')
             hold on
@@ -117,7 +117,7 @@ for u = noSignal : noSignal
         %==========================================================================
         if (flag1 ==1)
             peak{i}(peak{i}(:,2) > 20*threshold(i),:)=[];
-            threshold(i) = mean(peak{i}(:,2)); % Tinh lai threshold sau khi loai nhung dinh lon hon 40* old Threshold cu
+            threshold(i) = mean(peak{i}(:,2)); 
             peak{i}(peak{i}(:,2)< threshold(i),:)=[];
         end
         if (flag1 == 10)
@@ -131,17 +131,17 @@ for u = noSignal : noSignal
             plot(peak{i}(:,1),fishPackage{i}(peak{i}(:,1),2),'ro','MarkerEdgeColor','r','MarkerFaceColor','r','MarkerSize',6);
         end
        
-        %%=================================Finalize R =============================
+        %%=================================Finalize R peak=============================
 
         for j = 1:length(peak{i}(:,1));
 
-        temp(j,:)=((peak{i}(j,1) - RR_interval : peak{i}(j,1) + RR_interval)); % tim trong khoang 37 truoc va 37 sau
+        temp(j,:)=((peak{i}(j,1) - RR_interval : peak{i}(j,1) + RR_interval)); 
 
-        R_peak{i}(j,1) = max_find(fishPackage{i}(:,2),temp(j,:));
+        R_peak{i}(j,1) = max_find(fishPackage{i}(:,2),temp(j,:)); % max_find function
         end
         %%
         
-        %==========================Peak Final=====================================
+        %==========================Plot final Peaks=====================================
         meanDistance = mean(diff(R_peak{i}(:,1)));
         Average_HR(i) = 60/meanDistance*Fs;
         R_peak_final{i}(:,1)= R_peak{i}(:,1);
@@ -158,9 +158,9 @@ for u = noSignal : noSignal
             plot(R_peak_final{i}(:,1),fishPackage{i}(R_peak_final{i}(:,1),2),'ro','MarkerEdgeColor','r','MarkerFaceColor','r','MarkerSize',6);
         end
         %%
-        %%====================Trim off meaningless data==============================
+        %%====================Trim off noisy data based on RR interval (if RR interval is determined to be too short)==============================
         if(flag1 == 1)
-          distance = diff(R_peak_final{i}(:,1));
+          distance = diff(R_peak_final{i}(:,1)); 
             for k = 1:length(distance)-3
             flagx = 1;      
             for j = 1:3
@@ -201,7 +201,7 @@ for u = noSignal : noSignal
 %         end
 
         %%
-        %============================SA detection=================================%
+        %============================SA detection (sinus arrest detection based on RR interval, applied for other studies)=================================%
         if (flag1 == 2)
             j = 0;
             SA_point = zeros(length(R_peak_final(:,1)),2);
@@ -239,7 +239,7 @@ for u = noSignal : noSignal
         if (flag1 == 2)
             figure
             plot(ecg_zebrafish(:,2));
-            title('Tin Hieu ECG');
+            title('ECG');
             xlabel('Sample')
             ylabel('Amplitude')
             hold on
@@ -253,8 +253,8 @@ for u = noSignal : noSignal
         end
 
         %%
-        %============================Q & S detection===============================   
-        [Q_wave{i}, S_wave{i}] = findQS(fishPackage{i} ,R_peak_final{i}, QS_window);
+        %============================Q & S detection (plot with markers)===============================   
+        [Q_wave{i}, S_wave{i}] = findQS(fishPackage{i} ,R_peak_final{i}, QS_window); % find QS function based on predetermined parameters
         if (flag1 == 2)
             figure
             plot(fishPackage{i}(:,2));
@@ -269,8 +269,8 @@ for u = noSignal : noSignal
 
 
         %%
-        %====================== Find P wave & T wave===============================
-         [P_wave{i}, T_wave{i}, T_wave_offset{i}] = findPT(fishPackage{i}(:,2),R_peak_final{i}(:,1), Q_wave{i},S_wave{i});
+        %====================== Find P wave & T wave (plot with markers)===============================
+         [P_wave{i}, T_wave{i}, T_wave_offset{i}] = findPT(fishPackage{i}(:,2),R_peak_final{i}(:,1), Q_wave{i},S_wave{i}); % findPT function based on predetermined parameters
         if (flag1 == 1)
             figure
             plot(fishPackage{i}(:,2));
@@ -284,13 +284,14 @@ for u = noSignal : noSignal
             plot(T_wave{i}(1:length(T_wave{i}) - 1,1),fishPackage{i}(T_wave{i}(1:length(T_wave{i}) - 1,1),2),'g*','MarkerEdgeColor','g','MarkerFaceColor','g','MarkerSize',6); 
             plot(T_wave_offset{i}(:,1),fishPackage{i}(T_wave_offset{i}(:,1),2),'g+','MarkerEdgeColor','r','MarkerFaceColor','r','MarkerSize',6); 
         end
+
+        % find average parameters for each segment of data (between R peaks)
         Average_Pwave(i) = sum(abs(P_wave{i}(:,2)))/(length(P_wave{i}) - 2);
         
         Average_Rwave(i) = sum(abs(R_peak_final{i}(2:end-1,2)))/(length(R_peak_final{i}) - 2);
         
-        Ratio(i) =  Average_Pwave(i)/Average_Rwave(i);
+        Ratio(i) =  Average_Pwave(i)/Average_Rwave(i); % Ratio of P wave to R wave (10 - 20 percent is considered normal)
         Average_RR(i) = sum(abs(diff(R_peak_final{i}(2:end-1,1)))/Fs)/(length(R_peak_final{i}) - 2);
-        %Average_RT(i) = sum(abs(R_peak_final{i}(1:length(R_peak_final{i}) - 1,1) - T_wave{i}(1:length(T_wave{i}) - 1,1))/Fs)/(length(T_wave{i}) - 1);
         Average_RT(i) = sum(abs(R_peak_final{i}(1:length(R_peak_final{i}) - 1,1) - T_wave{i}(1:length(T_wave{i}) - 1,1))/Fs)/(length(T_wave{i}) - 1);
         Average_QT(i) = sum(abs(Q_wave{i}(1:length(R_peak_final{i}) - 1,1) - T_wave_offset{i}(:,1)))/(length(T_wave{i}) - 1);
         QTc(i) =(Average_QT(i))./sqrt(Average_RR(i));
@@ -299,31 +300,9 @@ for u = noSignal : noSignal
         %NoRPeak(i) = length(P_wave{i});
         %%
     end
-    mean_Average_Pwave(u) = mean(Average_Pwave);
-    mean_Average_Rwave(u) = mean(Average_Rwave);
-    mean_Ratio(u) = mean(Ratio);
-    mean_Average_HR(u) = mean(Average_HR);
-    %mean_Average_RT(u) = mean(Average_RT);
-    mean_Average_RR(u) = mean (Average_RR);
-    mean_QTc(u,1) = mean(QTc);
-    mean_QTc(u,2) = std(QTc);
-   % mean_QTc(u,2) = mean(QTc);
-    mean_RTc(u) = mean(RTc);
-    mean_ST(u) = mean(Average_ST);
 end
-Ave_Ratio = mean_Ratio';
-% Ave_RT = Average_RT';
-% Ave_QT = Average_QT';
-% NoR = NoRPeak';
-% A_QTc = QTc';
-% A_RTc = RTc';
-Ave_RR = mean_Average_RR';
-Ave_HR = mean_Average_HR';
-Ave_R = mean_Average_Rwave';
-Ave_RTc = mean_RTc';
-Ave_QTc = mean_QTc';
-Ave_ST = mean_ST';
 
+% Find average parameters for each data file (and experimental group)
 A_HR(1,noSignal) = sum(Average_HR)/length(Average_HR);
 A_QTc(1,noSignal) = sum(QTc)/length(QTc);
 A_Ratio(1,noSignal) = sum(Ratio)/length(Ratio);
@@ -334,7 +313,7 @@ A_RT(1,noSignal) = sum(Average_RT)/length(Average_RT);
 A_ST(1,noSignal) = sum(Average_ST)/length(Average_ST);
 %A_QRS(1,noSignal) = sum(Average_QRS)/length(Average_QRS);
 
-DataA = readtable('C:\Users\jimmy\OneDrive\School Work\PhD\PhD Research\Methamphetamine Study\Large Exp\Data Analysis.xlsx');
+DataA = readtable(''); % Consolidate data into output table for subsequent data analysis
 DataA(1,noSignal) = array2table(A_HR(1,noSignal));
 DataA(2,noSignal) = array2table(A_QT(1,noSignal));
 DataA(3,noSignal) = array2table(A_QTc(1,noSignal));
@@ -344,7 +323,7 @@ DataA(6,noSignal) = array2table(A_RT(1,noSignal));
 DataA(7,noSignal) = array2table(A_RTc(1,noSignal));
 DataA(8,noSignal) = array2table(A_ST(1,noSignal));
 %DataA(9,noSignal) = array2table(A_QRS(1,noSignal));
-writetable(DataA,'C:\Users\jimmy\OneDrive\School Work\PhD\PhD Research\Methamphetamine Study\Large Exp\Data Analysis.xlsx')
+writetable(DataA,''); 
 end
 
 
